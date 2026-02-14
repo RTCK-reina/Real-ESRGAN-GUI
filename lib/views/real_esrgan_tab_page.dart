@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import 'package:real_esrgan_gui/components/io_form.dart';
 import 'package:real_esrgan_gui/components/model_type_dropdown.dart';
 import 'package:real_esrgan_gui/components/output_format_dropdown.dart';
+import 'package:real_esrgan_gui/components/processing_profile_dropdown.dart';
 import 'package:real_esrgan_gui/components/start_button_and_progress_bar.dart';
 import 'package:real_esrgan_gui/components/upscale_ratio_dropdown.dart';
 import 'package:real_esrgan_gui/utils.dart';
@@ -52,6 +53,9 @@ class RealESRGANTabPageState extends State<RealESRGANTabPage> {
   /// 保存形式 (デフォルト: jpg (ただし既定で選択された拡大元画像の拡張子に変更される))
   /// "jpg"・"png"・"webp" のいずれか
   String outputFormat = 'jpg';
+
+  /// 処理プロファイル (デフォルト: バランス)
+  ProcessingProfile processingProfile = ProcessingProfile.balanced;
 
   // ***** プロセス実行関連 *****
 
@@ -114,6 +118,12 @@ class RealESRGANTabPageState extends State<RealESRGANTabPage> {
       // realesrgan-ncnn-vulkan の実行ファイルのパスを取得
       var executablePath = getUpscaleAlgorithmExecutablePath(UpscaleAlgorithmType.RealESRGAN);
 
+      // 実行オプションを構築
+      var runtimeOptions = UpscaleRuntimeOptions.fromProfile(
+        profile: processingProfile,
+        supportsTTA: true,
+      );
+
       // realesrgan-ncnn-vulkan コマンドを実行
       // ワーキングディレクトリを実行ファイルと同じフォルダに移動しておかないと macOS で Segmentation fault になり実行に失敗する
       // 実行ファイルと同じフォルダでないと models/ 以下の学習済みモデルが読み込めないのかも…？
@@ -130,6 +140,12 @@ class RealESRGANTabPageState extends State<RealESRGANTabPage> {
           '-s', upscaleRatio.replaceAll('x', ''),
           // 保存形式
           '-f', outputFormat,
+          // スレッド数設定 (load:process:save)
+          '-j', runtimeOptions.threadOption,
+          // タイルサイズ (0 の場合は自動)
+          '-t', runtimeOptions.tileSize.toString(),
+          // 品質優先プロファイル時のみ TTA を有効化
+          if (runtimeOptions.enableTTAMode) '-x',
         ],
         workingDirectory: path.dirname(executablePath),
       );
@@ -268,6 +284,14 @@ class RealESRGANTabPageState extends State<RealESRGANTabPage> {
                 outputFormat: outputFormat,
                 onChanged: (String? value) {
                   setState(() => outputFormat = value!);
+                },
+              ),
+              const SizedBox(height: 20),
+              ProcessingProfileDropdownWidget(
+                profile: processingProfile,
+                supportsTTAMode: true,
+                onChanged: (ProcessingProfile? value) {
+                  setState(() => processingProfile = value!);
                 },
               ),
               const SizedBox(height: 20),

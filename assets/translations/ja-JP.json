@@ -20,7 +20,8 @@
     "overwriteFolder": "フォルダを上書き",
     "updateInformation": "アップデート情報",
     "later": "今はまだしない",
-    "download": "ダウンロード"
+    "download": "ダウンロード",
+    "profile": "処理プロファイル:"
   },
   "model": {
     "RealESRGAN": {
@@ -66,5 +67,10 @@
     "overwriteFolderConfirm": "保存先のフォルダ \"{}\" はすでに存在します。\n保存先のフォルダ内にあるファイルが上書きされる可能性があります。本当にフォルダを上書きしますか？",
     "noImageFilesInFolder": "指定されたフォルダの中に画像ファイルが見つかりませんでした。",
     "updateInformation": "新しいバージョン {} がリリースされています。\nアップデートをダウンロードしますか？"
+  },
+  "profile": {
+    "balanced": "バランス (標準設定: 速度と品質の両立)",
+    "speed": "速度優先 (高速化: 品質より処理速度を重視)",
+    "quality": "品質優先 (高品質: タイル分割 + {tta})"
   }
 }

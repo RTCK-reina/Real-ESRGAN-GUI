@@ -8,6 +8,7 @@ import 'package:real_esrgan_gui/components/io_form.dart';
 import 'package:real_esrgan_gui/components/denoise_level_dropdown.dart';
 import 'package:real_esrgan_gui/components/model_type_dropdown.dart';
 import 'package:real_esrgan_gui/components/output_format_dropdown.dart';
+import 'package:real_esrgan_gui/components/processing_profile_dropdown.dart';
 import 'package:real_esrgan_gui/components/start_button_and_progress_bar.dart';
 import 'package:real_esrgan_gui/components/upscale_ratio_dropdown.dart';
 import 'package:real_esrgan_gui/utils.dart';
@@ -56,6 +57,9 @@ class RealCUGANTabPageState extends State<RealCUGANTabPage> {
   /// 保存形式 (デフォルト: jpg (ただし既定で選択された拡大元画像の拡張子に変更される))
   /// "jpg"・"png"・"webp" のいずれか
   String outputFormat = 'jpg';
+
+  /// 処理プロファイル (デフォルト: バランス)
+  ProcessingProfile processingProfile = ProcessingProfile.balanced;
 
   // ***** プロセス実行関連 *****
 
@@ -143,6 +147,12 @@ class RealCUGANTabPageState extends State<RealCUGANTabPage> {
           break;
       }
 
+      // 実行オプションを構築
+      var runtimeOptions = UpscaleRuntimeOptions.fromProfile(
+        profile: processingProfile,
+        supportsTTA: false,
+      );
+
       // realcugan-ncnn-vulkan コマンドを実行
       // ワーキングディレクトリを実行ファイルと同じフォルダに移動しておかないと macOS で Segmentation fault になり実行に失敗する
       // 実行ファイルと同じフォルダでないと models/ 以下の学習済みモデルが読み込めないのかも…？
@@ -161,6 +171,10 @@ class RealCUGANTabPageState extends State<RealCUGANTabPage> {
           '-s', upscaleRatio.replaceAll('x', ''),
           // 保存形式
           '-f', outputFormat,
+          // スレッド数設定 (load:process:save)
+          '-j', runtimeOptions.threadOption,
+          // タイルサイズ (0 の場合は自動)
+          '-t', runtimeOptions.tileSize.toString(),
         ],
         workingDirectory: path.dirname(executablePath),
       );
@@ -346,6 +360,14 @@ class RealCUGANTabPageState extends State<RealCUGANTabPage> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 20),
+                ProcessingProfileDropdownWidget(
+                  profile: processingProfile,
+                  supportsTTAMode: false,
+                  onChanged: (ProcessingProfile? value) {
+                    setState(() => processingProfile = value!);
+                  },
                 ),
                 const SizedBox(height: 20),
               ],

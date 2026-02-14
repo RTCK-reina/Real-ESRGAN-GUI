@@ -13,6 +13,72 @@ enum UpscaleAlgorithmType {
   RealCUGAN,
 }
 
+/// 処理プロファイル
+enum ProcessingProfile {
+  balanced,
+  speed,
+  quality,
+}
+
+/// アップスケール処理時の実行オプション
+class UpscaleRuntimeOptions {
+  UpscaleRuntimeOptions({
+    required this.profile,
+    required this.loadThreadCount,
+    required this.procThreadCount,
+    required this.saveThreadCount,
+    required this.tileSize,
+    required this.enableTTAMode,
+  });
+
+  ProcessingProfile profile;
+  int loadThreadCount;
+  int procThreadCount;
+  int saveThreadCount;
+  int tileSize;
+  bool enableTTAMode;
+
+  /// ncnn-vulkan の -j 引数向けにスレッド設定を組み立てる
+  String get threadOption => '${loadThreadCount}:${procThreadCount}:${saveThreadCount}';
+
+  /// プリセットに応じた実行オプションを生成する
+  static UpscaleRuntimeOptions fromProfile({
+    required ProcessingProfile profile,
+    required bool supportsTTA,
+  }) {
+    switch (profile) {
+      case ProcessingProfile.speed:
+        return UpscaleRuntimeOptions(
+          profile: profile,
+          loadThreadCount: 2,
+          procThreadCount: 4,
+          saveThreadCount: 2,
+          tileSize: 0,
+          enableTTAMode: false,
+        );
+      case ProcessingProfile.quality:
+        return UpscaleRuntimeOptions(
+          profile: profile,
+          loadThreadCount: 1,
+          procThreadCount: 2,
+          saveThreadCount: 1,
+          tileSize: 200,
+          enableTTAMode: supportsTTA,
+        );
+      case ProcessingProfile.balanced:
+      default:
+        return UpscaleRuntimeOptions(
+          profile: profile,
+          loadThreadCount: 1,
+          procThreadCount: 2,
+          saveThreadCount: 2,
+          tileSize: 0,
+          enableTTAMode: false,
+        );
+    }
+  }
+}
+
 /// 拡大アルゴリズムの実行ファイルのパスを取得する
 String getUpscaleAlgorithmExecutablePath(UpscaleAlgorithmType upscaleAlgorithmType) {
 
