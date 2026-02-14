@@ -178,6 +178,8 @@ Future<List<Map<String, String>>> getInputFileWithOutputFilePairList({
   required BuildContext context,
   required IOFormMode ioFormMode,
   required String outputFormat,
+  bool includeSubdirectories = false,
+  bool skipExistingOutput = false,
   required TextEditingController inputFileController,
   required TextEditingController outputFileController,
   required TextEditingController inputFolderController,
@@ -196,11 +198,15 @@ Future<List<Map<String, String>>> getInputFileWithOutputFilePairList({
     // 出力先ファイルが保存されるフォルダを作成 (すでにある場合は何もしない)
     await Directory(path.dirname(outputFileController.text)).create(recursive: true);
 
-  // フォルダ選択モードでは、選択されたフォルダ以下の画像ファイル（1階層のみ）すべてを追加する
+  // フォルダ選択モードでは、選択されたフォルダ以下の画像ファイルを追加する
+  // includeSubdirectories が false のときは直下のみ、true のときはサブフォルダも対象
   } else if (ioFormMode == IOFormMode.folderSelection) {
 
     // 画像ファイルのみを Glob で取得
-    var glob = Glob('{**.jpg,**.jpeg,**.png,**.webp}');
+    final globPattern = includeSubdirectories
+        ? '{**.jpg,**.jpeg,**.png,**.webp,**.JPG,**.JPEG,**.PNG,**.WEBP}'
+        : '{*.jpg,*.jpeg,*.png,*.webp,*.JPG,*.JPEG,*.PNG,*.WEBP}';
+    var glob = Glob(globPattern);
     for (var file in glob.listSync(root: inputFolderController.text)) {
 
       // 出力先のファイルパスを生成
@@ -214,12 +220,21 @@ Future<List<Map<String, String>>> getInputFileWithOutputFilePairList({
       ));
 
       // 入力元ファイルと出力先ファイルをセットで追加
+      // 既存の出力ファイルをスキップする設定の場合は、追加しない
+      if (skipExistingOutput && await File(outputFilePath).exists()) continue;
       imageFiles.add({'input': file.path, 'output': outputFilePath});
     }
 
     // 指定されたフォルダにひとつも画像ファイルが見つからなかった場合、エラーを出して終了
     if (ioFormMode == IOFormMode.folderSelection && imageFiles.isEmpty) {
-      showSnackBar(context: context, content: const Text('message.noImageFilesInFolder').tr());
+      showSnackBar(
+        context: context,
+        content: Text(
+          skipExistingOutput
+              ? 'message.noPendingImageFilesInFolder'
+              : 'message.noImageFilesInFolder',
+        ).tr(),
+      );
       return [];  // 空の配列を返す
     }
 

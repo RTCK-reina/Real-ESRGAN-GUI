@@ -20,7 +20,9 @@
     "overwriteFolder": "覆盖文件夹",
     "updateInformation": "更新信息",
     "later": "以后",
-    "download": "下载"
+    "download": "下载",
+    "includeSubdirectories": "包含子文件夹",
+    "skipExistingOutput": "跳过已生成的输出文件"
   },
   "model": {
     "RealESRGAN": {
@@ -65,6 +67,7 @@
     "overwriteFileConfirm": "输出文件 \"{}\" 已经存在。\n确认是否覆盖？",
     "overwriteFolderConfirm": "输出文件夹 \"{}\" 已经存在。\n在输出文件夹中的文件可能会被覆盖。 确认是否覆盖？",
     "noImageFilesInFolder": "在指定文件夹中找不到图像文件。",
-    "updateInformation": "新版本 {} 已经发布。\n你需要下载更新吗？"
+    "updateInformation": "新版本 {} 已经发布。\n你需要下载更新吗？",
+    "noPendingImageFilesInFolder": "未找到待处理的图像文件（可能都已生成输出）。"
   }
 }
