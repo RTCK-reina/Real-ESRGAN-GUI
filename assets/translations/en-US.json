@@ -20,7 +20,8 @@
     "overwriteFolder": "Overwrite folder",
     "updateInformation": "Update Information",
     "later": "Later",
-    "download": "Download"
+    "download": "Download",
+    "profile": "Processing profile:"
   },
   "model": {
     "RealESRGAN": {
@@ -66,5 +67,10 @@
     "overwriteFolderConfirm": "The output folder \"{}\" already exists.\nFiles in the output folder may be overwritten. Do you really want to overwrite the folder?",
     "noImageFilesInFolder": "No image files were found in the specified folder",
     "updateInformation": "New version {} has been released.\nWould you like to download the update?"
+  },
+  "profile": {
+    "balanced": "Balanced (default: speed/quality balance)",
+    "speed": "Speed priority (faster: favor speed over quality)",
+    "quality": "Quality priority (higher quality: tile mode + {tta})"
   }
 }

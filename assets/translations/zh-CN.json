@@ -20,7 +20,8 @@
     "overwriteFolder": "覆盖文件夹",
     "updateInformation": "更新信息",
     "later": "以后",
-    "download": "下载"
+    "download": "下载",
+    "profile": "处理配置:"
   },
   "model": {
     "RealESRGAN": {
@@ -66,5 +67,10 @@
     "overwriteFolderConfirm": "输出文件夹 \"{}\" 已经存在。\n在输出文件夹中的文件可能会被覆盖。 确认是否覆盖？",
     "noImageFilesInFolder": "在指定文件夹中找不到图像文件。",
     "updateInformation": "新版本 {} 已经发布。\n你需要下载更新吗？"
+  },
+  "profile": {
+    "balanced": "均衡（默认：速度与质量平衡）",
+    "speed": "速度优先（更快：优先速度）",
+    "quality": "质量优先（更高质量：分块 + {tta}）"
   }
 }
