@@ -57,6 +57,12 @@ class RealCUGANTabPageState extends State<RealCUGANTabPage> {
   /// "jpg"・"png"・"webp" のいずれか
   String outputFormat = 'jpg';
 
+  /// フォルダ選択モードでサブフォルダ内の画像も対象にするか
+  bool includeSubdirectories = false;
+
+  /// フォルダ選択モードで既存の出力ファイルをスキップするか
+  bool skipExistingOutput = true;
+
   // ***** プロセス実行関連 *****
 
   /// 拡大の進捗状況 (デフォルト: 0%)
@@ -95,6 +101,8 @@ class RealCUGANTabPageState extends State<RealCUGANTabPage> {
       context: context,
       ioFormMode: ioFormMode,
       outputFormat: outputFormat,
+      includeSubdirectories: includeSubdirectories,
+      skipExistingOutput: skipExistingOutput,
       inputFileController: inputFileController,
       outputFileController: outputFileController,
       inputFolderController: inputFolderController,
@@ -348,6 +356,26 @@ class RealCUGANTabPageState extends State<RealCUGANTabPage> {
                   ],
                 ),
                 const SizedBox(height: 20),
+                if (ioFormMode == IOFormMode.folderSelection)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    child: Column(
+                      children: [
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('label.includeSubdirectories').tr(),
+                          value: includeSubdirectories,
+                          onChanged: (value) => setState(() => includeSubdirectories = value),
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('label.skipExistingOutput').tr(),
+                          value: skipExistingOutput,
+                          onChanged: (value) => setState(() => skipExistingOutput = value),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),

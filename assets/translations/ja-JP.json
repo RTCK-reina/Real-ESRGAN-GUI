@@ -20,7 +20,9 @@
     "overwriteFolder": "フォルダを上書き",
     "updateInformation": "アップデート情報",
     "later": "今はまだしない",
-    "download": "ダウンロード"
+    "download": "ダウンロード",
+    "includeSubdirectories": "サブフォルダ内の画像も対象にする",
+    "skipExistingOutput": "すでに生成済みの出力ファイルをスキップする"
   },
   "model": {
     "RealESRGAN": {
@@ -65,6 +67,7 @@
     "overwriteFileConfirm": "保存先のファイル \"{}\" はすでに存在します。\n本当にファイルを上書きしますか？",
     "overwriteFolderConfirm": "保存先のフォルダ \"{}\" はすでに存在します。\n保存先のフォルダ内にあるファイルが上書きされる可能性があります。本当にフォルダを上書きしますか？",
     "noImageFilesInFolder": "指定されたフォルダの中に画像ファイルが見つかりませんでした。",
-    "updateInformation": "新しいバージョン {} がリリースされています。\nアップデートをダウンロードしますか？"
+    "updateInformation": "新しいバージョン {} がリリースされています。\nアップデートをダウンロードしますか？",
+    "noPendingImageFilesInFolder": "処理対象の画像が見つかりませんでした（すべて出力済みの可能性があります）。"
   }
 }
