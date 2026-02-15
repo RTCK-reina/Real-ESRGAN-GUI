@@ -20,6 +20,13 @@ enum ProcessingProfile {
   quality,
 }
 
+/// 出力先フォルダの既存時挙動
+enum OutputFolderBehavior {
+  createNew,
+  appendOverwrite,
+  recreate,
+}
+
 /// アップスケール処理時の実行オプション
 class UpscaleRuntimeOptions {
   UpscaleRuntimeOptions({
@@ -121,6 +128,7 @@ Future<bool> validateIOForm({
   required TextEditingController outputFileController,
   required TextEditingController inputFolderController,
   required TextEditingController outputFolderController,
+  required OutputFolderBehavior outputFolderBehavior,
 }) async {
 
   // バリデーション (ファイル選択モード)
@@ -203,7 +211,64 @@ Future<bool> validateIOForm({
 
     // 出力先フォルダが既に存在する場合
     // 上書きするかの確認を取る
-    if (await Directory(outputFolderController.text).exists()) {
+    if (await Directory(outputFolderController.text).exists() && outputFolderBehavior == OutputFolderBehavior.recreate) {
+      var overwrite = false;
+      var overwriteSecondConfirm = false;
+      await showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (_) {
+          return AlertDialog(
+            title: const Text('label.overwriteConfirm').tr(),
+            content: const Text('message.overwriteFolderConfirm').tr(args: [outputFolderController.text]),
+            actionsPadding: const EdgeInsets.only(right: 12, bottom: 12),
+            actions: [
+              TextButton(
+                child: const Text('label.cancel').tr(),
+                onPressed: () => Navigator.pop(context),
+              ),
+              TextButton(
+                child: const Text('label.overwriteFolder').tr(),
+                onPressed: () {
+                  overwrite = true;
+                  Navigator.pop(context);
+                }
+              ),
+            ],
+          );
+        },
+      );
+      if (overwrite) {
+        await showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (_) {
+            return AlertDialog(
+              title: const Text('label.overwriteConfirm').tr(),
+              content: const Text('message.overwriteFolderConfirm').tr(args: ['${outputFolderController.text}\n(DELETE & RECREATE)']),
+              actionsPadding: const EdgeInsets.only(right: 12, bottom: 12),
+              actions: [
+                TextButton(
+                  child: const Text('label.cancel').tr(),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                TextButton(
+                  child: const Text('label.overwriteFolder').tr(),
+                  onPressed: () {
+                    overwriteSecondConfirm = true;
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+      // キャンセルされたら実行しない
+      if (!overwriteSecondConfirm) return false;
+    }
+
+    if (await Directory(outputFolderController.text).exists() && outputFolderBehavior == OutputFolderBehavior.appendOverwrite) {
       var overwrite = false;
       await showDialog(
         context: context,
@@ -229,7 +294,6 @@ Future<bool> validateIOForm({
           );
         },
       );
-      // キャンセルされたら実行しない
       if (overwrite == false) return false;
     }
   }
@@ -248,6 +312,7 @@ Future<List<Map<String, String>>> getInputFileWithOutputFilePairList({
   required TextEditingController outputFileController,
   required TextEditingController inputFolderController,
   required TextEditingController outputFolderController,
+  required OutputFolderBehavior outputFolderBehavior,
 }) async {
 
   List<Map<String, String>> imageFiles = [];
@@ -265,6 +330,24 @@ Future<List<Map<String, String>>> getInputFileWithOutputFilePairList({
   // フォルダ選択モードでは、選択されたフォルダ以下の画像ファイル（1階層のみ）すべてを追加する
   } else if (ioFormMode == IOFormMode.folderSelection) {
 
+    var outputRootDirectoryPath = outputFolderController.text;
+    var outputDirectory = Directory(outputFolderController.text);
+
+    // 出力先フォルダの既存時挙動を反映
+    if (await outputDirectory.exists()) {
+      switch (outputFolderBehavior) {
+        case OutputFolderBehavior.createNew:
+          outputRootDirectoryPath = await _createUniqueOutputDirectoryPath(outputFolderController.text);
+          outputFolderController.text = outputRootDirectoryPath;
+          break;
+        case OutputFolderBehavior.recreate:
+          await outputDirectory.delete(recursive: true);
+          break;
+        case OutputFolderBehavior.appendOverwrite:
+          break;
+      }
+    }
+
     // 画像ファイルのみを Glob で取得
     var glob = Glob('{**.jpg,**.jpeg,**.png,**.webp}');
     for (var file in glob.listSync(root: inputFolderController.text)) {
@@ -272,7 +355,7 @@ Future<List<Map<String, String>>> getInputFileWithOutputFilePairList({
       // 出力先のファイルパスを生成
       var outputFilePath = path.normalize(path.join(
         // 出力先のフォルダパスフォームの値
-        outputFolderController.text,
+        outputRootDirectoryPath,
         // 拡大元の画像ファイルのフォルダ名 (選択されたフォルダからの相対パス)
         path.relative(path.dirname(file.path), from: inputFolderController.text),
         // 入力元ファイルの拡張子なしファイル名 + 保存形式 (jpg / png / webp)
@@ -290,10 +373,26 @@ Future<List<Map<String, String>>> getInputFileWithOutputFilePairList({
     }
 
     // 出力先フォルダを作成 (すでにある場合は何もしない)
-    await Directory(outputFolderController.text).create(recursive: true);
+    await Directory(outputRootDirectoryPath).create(recursive: true);
   }
 
   return imageFiles;
+}
+
+Future<String> _createUniqueOutputDirectoryPath(String basePath) async {
+  var dateTime = DateTime.now();
+  var timestamp = '${dateTime.year.toString().padLeft(4, '0')}'
+      '${dateTime.month.toString().padLeft(2, '0')}'
+      '${dateTime.day.toString().padLeft(2, '0')}-'
+      '${dateTime.hour.toString().padLeft(2, '0')}'
+      '${dateTime.minute.toString().padLeft(2, '0')}'
+      '${dateTime.second.toString().padLeft(2, '0')}';
+  var candidate = '${basePath}-${timestamp}';
+  var serial = 1;
+  while (await Directory(candidate).exists()) {
+    candidate = '${basePath}-${timestamp}-${serial++}';
+  }
+  return candidate;
 }
 
 /// 簡単に SnackBar を表示する

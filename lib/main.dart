@@ -4,13 +4,11 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:real_esrgan_gui/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:real_esrgan_gui/views/real_cugan_tab_page.dart';
 import 'package:real_esrgan_gui/views/real_esrgan_tab_page.dart';
 import 'package:window_size/window_size.dart';
-
-/// バージョン
-const String version = '1.2.0';
 
 void main() async {
 
@@ -127,11 +125,11 @@ class MainWindowPageState extends State<MainWindowPage> with SingleTickerProvide
 
     // 更新をチェック
     (() async {
-      var response = await http.get(Uri.parse('https://api.github.com/repos/tsukumijima/Real-ESRGAN-GUI/tags'));
+      var response = await http.get(Uri.parse('$githubLatestReleaseApiUrl'));
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
-        var retrieveVersion = (data[0]['name'] as String).replaceAll('v', '');
-        if (version != retrieveVersion) {
+        var retrieveVersion = ((data['tag_name'] ?? data['name']) as String).replaceAll('v', '');
+        if (appVersion != retrieveVersion) {
 
           // 更新があるのでダイヤログを表示
           var goUpdateUrl = false;
@@ -169,7 +167,7 @@ class MainWindowPageState extends State<MainWindowPage> with SingleTickerProvide
 
           // ダウンロード先 URL を開く
           if (goUpdateUrl) {
-            await launchUrl(Uri.parse('https://github.com/tsukumijima/Real-ESRGAN-GUI/releases/tag/v${retrieveVersion}'));
+            await launchUrl(Uri.parse('$githubReleasesUrl/tag/v$retrieveVersion'));
           }
         }
       }
@@ -184,7 +182,7 @@ class MainWindowPageState extends State<MainWindowPage> with SingleTickerProvide
         title: Text(widget.title),
         actions: const [
           Center(
-            child: Text('version ${version}', style: TextStyle(fontSize: 16)),
+            child: Text('version $appVersion', style: TextStyle(fontSize: 16)),
           ),
           SizedBox(width: 16),
         ],
